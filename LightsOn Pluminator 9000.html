@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>LightsOn Safety Solutions Pluminator 9000</title>
+<style>
+  :root { --bg:#0b1220; --panel:#101826; --muted:#5f728a; --text:#e8eef8; --accent:#4cc9f0; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  header{padding:14px 18px;border-bottom:1px solid #1c2838;background:linear-gradient(180deg,#0f1726,#0c1522)}
+  header h1{margin:0;font-size:18px}
+  header p{margin:4px 0 0;color:var(--muted)}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px;min-height:calc(100vh - 70px)}
+  .panel{background:var(--panel);border:1px solid #1b2738;border-radius:14px;padding:14px}
+  fieldset{border:1px solid #243349;border-radius:12px;margin:10px 0;padding:10px}
+  legend{padding:0 8px;color:#b9c7db}
+  label{display:block;margin:8px 0 4px;color:#b7c7dd}
+  input[type="range"]{width:100%}
+  input[type="text"],button{background:#0d1927;color:var(--text);border:1px solid #243349;border-radius:10px;padding:8px}
+  input[type="color"]{border:2px solid var(--accent);background:#18283a;border-radius:10px;cursor:pointer;height:42px;width:100%;padding:0}
+  .colorRow{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center}
+  .hint{color:#8ea2bb;font-size:12px}
+  .stage{position:relative;display:grid;place-items:center;background:#0a0f18;border-radius:14px;border:1px solid #1b2738;min-height:60vh;overflow:hidden}
+  canvas{max-width:100%;height:auto;border-radius:12px;background:#000}
+  .hotspot{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.35);pointer-events:none;transform:translate(-50%,-50%)}
+  #hotspotA{background:#ff3b30;}
+  #hotspotB{background:#007bff;}
+</style>
+<style id="atlas-theme-append-v1">
+/* === APPEND-ONLY THEME OVERRIDES (Black/Yellow) ===
+   - Non-destructive: does not delete/replace existing rules; only overrides via specificity/vars.
+   - Matches the Flameannator9000 look & feel.
+*/
+:root {
+  --bg:#0b1220;            /* deep blue-black background */
+  --panel:#101826;         /* panel surface (left settings, cards) */
+  --muted:#8893a3;         /* subdued text */
+  --text:#e8eef8;          /* primary text */
+  --accent:#FFC107;        /* unified yellow accent (matches prior app's headline yellow) */
+  --border:#1a2332;        /* soft border */
+}
+
+/* Base application surface */
+body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Common containers/panels that often appear in these simulators */
+aside, .sidebar, .sidepanel, .left-panel, #sidebar, #settingsPanel, [data-role="sidebar"] {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border-right: 1px solid var(--border);
+}
+
+/* Headers / toolbars */
+header, .topbar, .toolbar, #topbar {
+  background: linear-gradient(180deg, rgba(16,24,38,.96), rgba(16,24,38,.88)) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cards / boxes */
+.card, .panel, .box, .group, .fieldset, fieldset, .controls, .settings, .module {
+  background: #0f1726 !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25) !important;
+  border-radius: 14px !important;
+  color: var(--text) !important;
+}
+
+/* Inputs */
+input[type="text"], input[type="number"], input[type="range"], input[type="color"], input[type="file"],
+select, textarea {
+  background: #0d1524 !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  outline: none !important;
+}
+input::placeholder, textarea::placeholder { color: var(--muted) !important; }
+
+/* Buttons – primary and subtle variants */
+button, .btn, input[type="button"], input[type="submit"] {
+  background: #182335 !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: .55rem .9rem !important;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+}
+button:hover, .btn:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  border-color: rgba(255, 193, 7, 0.65) !important; /* accent hover */
+  box-shadow: 0 6px 18px rgba(255, 193, 7, .12) !important;
+  transform: translateY(-1px);
+}
+button.primary, .btn-primary, [data-variant="primary"] {
+  background: var(--accent) !important;
+  color: #111 !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 10px 20px rgba(255,193,7,.18) !important;
+}
+button.primary:hover, .btn-primary:hover, [data-variant="primary"]:hover {
+  box-shadow: 0 12px 26px rgba(255,193,7,.26) !important;
+}
+
+/* Toggles / labels that convey active state */
+.active, .selected, [aria-pressed="true"], [data-active="true"] {
+  outline: 2px solid rgba(255,193,7,.35) !important;
+  outline-offset: 1px;
+}
+
+/* Accent text & badges */
+a, .link, .accent, .badge, .pill {
+  color: var(--accent) !important;
+}
+.badge, .pill {
+  background: rgba(255,193,7,.12) !important;
+  border: 1px solid rgba(255,193,7,.35) !important;
+  border-radius: 999px !important;
+  padding: .2rem .5rem !important;
+}
+
+/* Sliders */
+input[type="range"]::-webkit-slider-thumb { background: var(--accent); }
+input[type="range"]::-moz-range-thumb { background: var(--accent); }
+input[type="range"] { accent-color: var(--accent); }
+
+/* Color pickers often need a visible frame on dark UI */
+input[type="color"] {
+  border: 1px solid var(--border) !important;
+}
+
+/* Canvas / stage wrapper – keep neutral; the visual content sits here */
+#stage, .stage, #canvasWrap, .canvas-wrap, .canvas, canvas {
+  background-color: #0a0f1a !important;
+}
+
+/* Fine line separators */
+hr, .divider {
+  border: none;
+  height: 1px;
+  background: var(--border) !important;
+  opacity: .75;
+}
+
+/* Tables (if any) */
+table { border-color: var(--border) !important; color: var(--text) !important; }
+th { background: #121b2b !important; }
+td, th { border: 1px solid var(--border) !important; }
+</style></head>
+<body>
+<header>
+<h1>LightsOn Safety Solutions - Pluminator 9000</h1>
+<p>Multiple Plumes + Photo Import</p>
+</header>
+<div class="wrap">
+<aside class="panel">
+<fieldset>
+<legend>Base Photo</legend>
+<input accept="image/*" id="photoInput" type="file"/>
+<div class="hint">Click to move the active plume.</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<button id="toggleEmitter">Active: A</button>
+<button id="toggleB">Add Emitter B</button>
+</div>
+</fieldset>
+<fieldset>
+<legend>Color &amp; Intensity</legend>
+<div class="colorRow">
+<input id="plumeColor" type="color" value="#ffffff"/>
+<input id="plumeHex" maxlength="7" type="text" value="#ffffff"/>
+</div>
+<label>Intensity <span id="amountVal">50</span></label>
+<input id="amount" max="100" min="0" type="range" value="50"/>
+<label>Opacity <span id="opacityVal">0.65</span></label>
+<input id="opacity" max="100" min="0" type="range" value="65"/>
+<label>Size <span id="sizeVal">1.2</span></label>
+<input id="size" max="300" min="5" type="range" value="120"/>
+</fieldset>
+<fieldset>
+<legend>Direction &amp; Shape</legend>
+<label>Angle (0–360°) <span id="angleVal">0</span></label>
+<input id="angle" max="360" min="0" type="range" value="0"/>
+<label>Tilt (depth) <span id="tiltVal">90</span>°</label>
+<input id="tilt" max="135" min="45" type="range" value="90"/>
+<label>Length (distance) <span id="lengthVal">1.0</span>x</label>
+<input id="length" max="3" min="0.2" step="0.1" type="range" value="1"/>
+<label>Width (spread) <span id="widthVal">1.0</span>x</label>
+<input id="width" max="3" min="0.3" step="0.1" type="range" value="1"/>
+<label>Rise speed <span id="riseVal">28</span></label>
+<input id="rise" max="80" min="5" type="range" value="28"/>
+</fieldset>
+<fieldset>
+<legend>Controls</legend>
+<button id="toggleHotspot">Hide hotspots</button>
+<button id="reset">Reset</button>
+</fieldset>
+</aside>
+<main class="panel">
+<div class="stage" id="stage">
+<canvas height="600" id="c" width="800"></canvas>
+<div class="hotspot" id="hotspotA"></div>
+<div class="hotspot" id="hotspotB" style="display:none"></div>
+</div>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const c=$('c'),ctx=c.getContext('2d'),stage=$('stage');
+const hotspotA=$('hotspotA'),hotspotB=$('hotspotB');
+let bgImg=new Image(),bgLoaded=false;
+
+let enableB=false,activeEmitter='A';
+let leakA={x:300,y:500},leakB={x:600,y:500};
+const state={color:'#ffffff',amount:50,opacity:0.65,size:1.2,rise:28,angle:0,tilt:90,length:1,width:1};
+const particles=[];
+let oc=document.createElement('canvas'),octx=oc.getContext('2d');
+oc.width=c.width;oc.height=c.height;
+
+$('toggleEmitter').onclick=()=>{if(!enableB){activeEmitter='A';return;}activeEmitter=activeEmitter==='A'?'B':'A';$('toggleEmitter').textContent='Active: '+activeEmitter;};
+$('toggleB').onclick=()=>{enableB=!enableB;$('toggleB').textContent=enableB?'Remove Emitter B':'Add Emitter B';hotspotB.style.display=enableB?'block':'none';if(!enableB){activeEmitter='A';$('toggleEmitter').textContent='Active: A';}};
+$('toggleHotspot').onclick=()=>{const newDisp=hotspotA.style.display==='none'?'block':'none';hotspotA.style.display=newDisp;if(enableB)hotspotB.style.display=newDisp;$('toggleHotspot').textContent=newDisp==='none'?'Show hotspots':'Hide hotspots';};
+$('reset').onclick=()=>{Object.assign(state,{color:'#ffffff',amount:50,opacity:.65,size:1.2,rise:28,angle:0,tilt:90,length:1,width:1});updateUI();particles.length=0;leakA={x:300,y:500};leakB={x:600,y:500};enableB=false;hotspotB.style.display='none';$('toggleB').textContent='Add Emitter B';activeEmitter='A';$('toggleEmitter').textContent='Active: A';draw();};
+
+function updateUI(){ $('plumeColor').value=state.color;$('plumeHex').value=state.color; }
+$('plumeColor').oninput=e=>setColor(e.target.value);
+$('plumeHex').oninput=e=>{const v=e.target.value;if(/^#([0-9a-fA-F]{6})$/.test(v))setColor(v);};
+function setColor(hex){if(!/^#([0-9a-fA-F]{6})$/.test(hex))return;state.color=hex.toLowerCase();updateUI();}
+function bindRange(id,key,out,xf=v=>v){const el=$(id),o=$(out);el.oninput=()=>{state[key]=xf(parseFloat(el.value));if(o)o.textContent=state[key].toFixed?state[key].toFixed(2):state[key];};el.dispatchEvent(new Event('input'));}
+bindRange('amount','amount','amountVal');bindRange('opacity','opacity','opacityVal',v=>v/100);
+bindRange('size','size','sizeVal',v=>v/100);bindRange('rise','rise','riseVal');
+bindRange('angle','angle','angleVal');bindRange('tilt','tilt','tiltVal');
+bindRange('length','length','lengthVal');bindRange('width','width','widthVal');
+
+$('photoInput').addEventListener('change',e=>{
+ const f=e.target.files[0];if(!f)return;
+ const url=URL.createObjectURL(f);
+ bgImg.onload=()=>{bgLoaded=true;resizeAll(bgImg.width,bgImg.height);draw();};
+ bgImg.src=url;
+});
+
+stage.addEventListener('mousedown',e=>{
+ const p=toCanvasCoords(e);
+ if(activeEmitter==='A')leakA=p;else leakB=p;
+ updateHotspots();
+});
+
+function toCanvasCoords(e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)};}
+function updateHotspots(){const r=c.getBoundingClientRect();hotspotA.style.left=(r.left+leakA.x*(r.width/c.width))+'px';hotspotA.style.top=(r.top+leakA.y*(r.height/c.height))+'px';hotspotB.style.left=(r.left+leakB.x*(r.width/c.width))+'px';hotspotB.style.top=(r.top+leakB.y*(r.height/c.height))+'px';}
+
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function spawnFrom(leak,dt){
+ const rate=state.amount*0.4;
+ const expect=rate*dt;
+ let n=Math.floor(expect)+(Math.random()<(expect%1)?1:0);
+ const baseAng=(state.angle-90)*Math.PI/180;
+ const tiltAng=(state.tilt-90)*Math.PI/180;
+ const baseSp=(state.rise/60)*state.length;
+ for(let i=0;i<n;i++){
+   const spread=(state.width-1)*40;
+   const offsetAng=baseAng+(Math.random()-0.5)*(spread*Math.PI/180);
+   const sp=baseSp*rnd(.7,1.4);
+   const vx=Math.cos(offsetAng)*sp;
+   const vy=Math.sin(offsetAng)*sp*Math.cos(tiltAng);
+   const vz=Math.sin(tiltAng);
+   particles.push({x:leak.x+rnd(-2,2)*state.width,y:leak.y+rnd(-2,2)*state.width,vx,vy,life:rnd(1.8,3.4),age:0,size:(state.size*18)*rnd(.7,1.6)*(1-0.4*vz)});
+ }
+}
+function spawn(dt){spawnFrom(leakA,dt);if(enableB)spawnFrom(leakB,dt);}
+function step(dt){for(let p of particles){p.x+=p.vx*60*dt;p.y+=p.vy*60*dt;p.age+=dt;}for(let i=particles.length-1;i>=0;i--)if(particles[i].age>particles[i].life)particles.splice(i,1);}
+function draw(){
+ ctx.clearRect(0,0,c.width,c.height);
+ if(bgLoaded)ctx.drawImage(bgImg,0,0,c.width,c.height);
+ octx.clearRect(0,0,oc.width,oc.height);
+ octx.globalCompositeOperation='source-over';
+ for(let p of particles){
+   const t=Math.min(1,p.age/p.life);
+   const a=state.opacity*(1-t);
+   const g=octx.createRadialGradient(p.x,p.y,p.size*0.1,p.x,p.y,p.size);
+   g.addColorStop(0,`rgba(255,255,255,${a})`);
+   g.addColorStop(0.5,`rgba(255,255,255,${a*0.5})`);
+   g.addColorStop(1,`rgba(255,255,255,0)`);
+   octx.fillStyle=g;
+   octx.beginPath();octx.arc(p.x,p.y,p.size,0,Math.PI*2);octx.fill();
+ }
+ octx.globalCompositeOperation='source-in';
+ octx.fillStyle=state.color;
+ octx.fillRect(0,0,oc.width,oc.height);
+ octx.globalCompositeOperation='source-over';
+ ctx.drawImage(oc,0,0,oc.width,oc.height);
+}
+function resizeAll(w,h){c.width=w;c.height=h;oc.width=w;oc.height=h;updateHotspots();draw();}
+let last=performance.now();
+function tick(now){
+ const dt=Math.min(.05,(now-last)/1000);
+ last=now;
+ spawn(dt);step(dt);draw();
+ requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+new ResizeObserver(()=>updateHotspots()).observe(stage);
+</script>
+</body>
+</html>
