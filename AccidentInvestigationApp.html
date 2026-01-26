@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Accident / Incident Investigation Report</title>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #111;
+    color: #fff;
+}
+.header {
+    background: #000;
+    padding: 20px;
+    border-bottom: 4px solid #f4c400;
+}
+.header h1 {
+    margin: 0;
+    color: #f4c400;
+}
+.container {
+    padding: 20px;
+}
+.section {
+    background: #1a1a1a;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 6px solid #f4c400;
+}
+.section h2 {
+    color: #f4c400;
+    margin-top: 0;
+}
+input, textarea, select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px 0;
+    border: none;
+    border-radius: 4px;
+}
+button {
+    background: #f4c400;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+button:hover {
+    background: #ffdb4d;
+}
+.remove-btn {
+    background: #cc0000;
+    color: white;
+}
+.entry-block {
+    border: 1px solid #333;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Accident / Incident Investigation Report</h1>
+</div>
+
+<div class="container">
+
+<div class="section">
+<h2>Incident Information</h2>
+<label>Incident Title</label>
+<input type="text" id="incidentTitle">
+
+<label>Date</label>
+<input type="date" id="incidentDate">
+
+<label>Time</label>
+<input type="time" id="incidentTime">
+
+<label>Location</label>
+<input type="text" id="incidentLocation">
+
+<label>Description</label>
+<textarea id="incidentDescription"></textarea>
+</div>
+
+<div class="section">
+<h2>Immediate Actions Taken</h2>
+<textarea id="immediateActions"></textarea>
+</div>
+
+<div class="section">
+<h2>Root Cause</h2>
+<textarea id="rootCause"></textarea>
+</div>
+
+<div class="section">
+<h2>Corrective Actions</h2>
+<textarea id="correctiveActions"></textarea>
+</div>
+
+<div class="section">
+<h2>Involved Persons</h2>
+<div id="personsContainer"></div>
+<button onclick="addPerson()">Add Person</button>
+</div>
+
+<div class="section">
+<h2>Witnesses</h2>
+<div id="witnessContainer"></div>
+<button onclick="addWitness()">Add Witness</button>
+</div>
+
+<div class="section">
+<button onclick="generatePDF()">Generate PDF</button>
+</div>
+
+</div>
+
+<script>
+function addPerson() {
+    const container = document.getElementById('personsContainer');
+    const div = document.createElement('div');
+    div.className = "entry-block";
+    div.innerHTML = `
+        <label>Name</label><input type="text" class="personName">
+        <label>Role/Title</label><input type="text" class="personRole">
+        <label>Injury Description</label><textarea class="personInjury"></textarea>
+        <button class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+function addWitness() {
+    const container = document.getElementById('witnessContainer');
+    const div = document.createElement('div');
+    div.className = "entry-block";
+    div.innerHTML = `
+        <label>Name</label><input type="text" class="witnessName">
+        <label>Statement</label><textarea class="witnessStatement"></textarea>
+        <button class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+async function generatePDF() {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 15;
+
+    function addLine(text) {
+        const splitText = doc.splitTextToSize(text, 180);
+        doc.text(splitText, 15, y);
+        y += splitText.length * 7;
+
+        if (y > 270) {
+            doc.addPage();
+            y = 15;
+        }
+    }
+
+    doc.setFontSize(16);
+    addLine("Accident / Incident Investigation Report");
+    y += 5;
+
+    doc.setFontSize(12);
+
+    addLine("Incident Information");
+    addLine("Title: " + document.getElementById("incidentTitle").value);
+    addLine("Date: " + document.getElementById("incidentDate").value);
+    addLine("Time: " + document.getElementById("incidentTime").value);
+    addLine("Location: " + document.getElementById("incidentLocation").value);
+    addLine(" ");
+    addLine("Description:");
+    addLine(document.getElementById("incidentDescription").value);
+    addLine(" ");
+
+    addLine("Immediate Actions:");
+    addLine(document.getElementById("immediateActions").value);
+    addLine(" ");
+
+    addLine("Root Cause:");
+    addLine(document.getElementById("rootCause").value);
+    addLine(" ");
+
+    addLine("Corrective Actions:");
+    addLine(document.getElementById("correctiveActions").value);
+    addLine(" ");
+
+    const persons = document.querySelectorAll('.personName');
+    if (persons.length > 0) {
+        addLine("Involved Persons:");
+        persons.forEach((p, index) => {
+            const role = document.querySelectorAll('.personRole')[index].value;
+            const injury = document.querySelectorAll('.personInjury')[index].value;
+            addLine(p.value + " - " + role);
+            addLine("Injury: " + injury);
+            addLine(" ");
+        });
+    }
+
+    const witnesses = document.querySelectorAll('.witnessName');
+    if (witnesses.length > 0) {
+        addLine("Witnesses:");
+        witnesses.forEach((w, index) => {
+            const statement = document.querySelectorAll('.witnessStatement')[index].value;
+            addLine(w.value);
+            addLine(statement);
+            addLine(" ");
+        });
+    }
+
+    doc.save("Incident_Report.pdf");
+}
+</script>
+
+</body>
+</html>
