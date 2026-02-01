@@ -664,12 +664,11 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     setButtonState(true, 'Capturing…');
 
     const gif = new GIF({
-      workers: 2,
+      workers: 0,
       quality: 12,
       repeat: 0,
       width: canvas.width,
-      height: canvas.height,
-      workerScript: 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'
+      height: canvas.height
     });
 
     let renderTimeout;
