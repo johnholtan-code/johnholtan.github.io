@@ -649,7 +649,7 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     exportBtn.textContent = label;
   }
 
-  exportBtn.addEventListener('click', () => {
+  exportBtn.addEventListener('click', async () => {
     if (typeof GIF === 'undefined') {
       alert('GIF export library failed to load. Please check your connection and try again.');
       return;
@@ -664,31 +664,47 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     setButtonState(true, 'Capturing…');
 
     const gif = new GIF({
-      workers: 2,
+      workers: 0,
       quality: 12,
       repeat: 0,
       width: canvas.width,
-      height: canvas.height,
-      workerScript: 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'
+      height: canvas.height
     });
 
-    let captured = 0;
-    const captureInterval = setInterval(() => {
+    let renderTimeout;
+    const startRenderTimeout = () => {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        gif.abort();
+        alert('GIF rendering is taking too long. Please try again or reduce the canvas size.');
+      }, 20000);
+    };
+
+    for (let captured = 1; captured <= totalFrames; captured += 1) {
       gif.addFrame(canvas, { copy: true, delay: frameDelay });
-      captured += 1;
-      if (captured >= totalFrames) {
-        clearInterval(captureInterval);
-        setButtonState(true, 'Rendering…');
-        gif.render();
-      }
-    }, frameDelay);
+      setButtonState(true, `Capturing… ${captured}/${totalFrames}`);
+      await new Promise(resolve => setTimeout(resolve, frameDelay));
+    }
+
+    setButtonState(true, 'Rendering…');
+    startRenderTimeout();
+    gif.render();
 
     gif.on('progress', (p) => {
       const pct = Math.max(0, Math.min(100, Math.round(p * 100)));
       setButtonState(true, `Rendering… ${pct}%`);
+      startRenderTimeout();
+    });
+
+    gif.on('error', (err) => {
+      clearTimeout(renderTimeout);
+      console.warn(err);
+      alert('GIF rendering failed. Please try again or reduce the canvas size.');
+      setButtonState(false, '🎞️ Export GIF');
     });
 
     gif.on('finished', (blob) => {
+      clearTimeout(renderTimeout);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -701,6 +717,7 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     });
 
     gif.on('abort', () => {
+      clearTimeout(renderTimeout);
       setButtonState(false, '🎞️ Export GIF');
     });
   });
