@@ -148,6 +148,10 @@
     <button class="settings-btn" id="exportGif">🎞️ Export GIF</button>
     <button class="settings-btn" id="openSettings">⚙️ Settings</button>
   </div>
+d  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="settings-btn" id="exportGif">🎞️ Export GIF</button>
+    <button class="settings-btn" id="openSettings">⚙️ Settings</button>
+  </div>
 </header>
 
 <!-- Settings Modal -->
@@ -645,13 +649,25 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
 (() => {
   const exportBtn = document.getElementById('exportGif');
   if (!exportBtn) return;
+  let workerScriptUrl;
 
   function setButtonState(isBusy, label) {
     exportBtn.disabled = isBusy;
     exportBtn.textContent = label;
   }
 
-  exportBtn.addEventListener('click', () => {
+  async function getWorkerScriptUrl() {
+    if (workerScriptUrl) return workerScriptUrl;
+    const workerSrc = 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js';
+    const response = await fetch(workerSrc);
+    if (!response.ok) throw new Error('Failed to load GIF worker.');
+    const workerText = await response.text();
+    const blob = new Blob([workerText], { type: 'text/javascript' });
+    workerScriptUrl = URL.createObjectURL(blob);
+    return workerScriptUrl;
+  }
+
+  exportBtn.addEventListener('click', async () => {
     if (typeof GIF === 'undefined') {
       alert('GIF export library failed to load. Please check your connection and try again.');
       return;
@@ -663,34 +679,64 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     const frameDelay = 1000 / fps;
     const totalFrames = Math.round((durationMs / 1000) * fps);
 
-    const gif = new GIF({
-      workers: 2,
-      quality: 12,
-      repeat: 0,
-      width: canvas.width,
-      height: canvas.height,
-      workerScript: 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js'
-    });
-
     setButtonState(true, 'Capturing…');
 
-    let captured = 0;
-    const captureInterval = setInterval(() => {
+    let gif;
+    try {
+      const workerUrl = await getWorkerScriptUrl();
+      gif = new GIF({
+        workers: 2,
+        quality: 12,
+        repeat: 0,
+        width: canvas.width,
+        height: canvas.height,
+        workerScript: workerUrl
+      });
+    } catch (err) {
+      console.warn(err);
+      gif = new GIF({
+        workers: 0,
+        quality: 12,
+        repeat: 0,
+        width: canvas.width,
+        height: canvas.height
+      });
+    }
+
+    let renderTimeout;
+    const startRenderTimeout = () => {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        gif.abort();
+        alert('GIF rendering is taking too long. Please try again or reduce the canvas size.');
+      }, 20000);
+    };
+
+    for (let captured = 1; captured <= totalFrames; captured += 1) {
       gif.addFrame(canvas, { copy: true, delay: frameDelay });
-      captured += 1;
-      if (captured >= totalFrames) {
-        clearInterval(captureInterval);
-        setButtonState(true, 'Rendering…');
-        gif.render();
-      }
-    }, frameDelay);
+      setButtonState(true, `Capturing… ${captured}/${totalFrames}`);
+      await new Promise(resolve => setTimeout(resolve, frameDelay));
+    }
+
+    setButtonState(true, 'Rendering…');
+    startRenderTimeout();
+    gif.render();
 
     gif.on('progress', (p) => {
       const pct = Math.max(0, Math.min(100, Math.round(p * 100)));
       setButtonState(true, `Rendering… ${pct}%`);
+      startRenderTimeout();
+    });
+
+    gif.on('error', (err) => {
+      clearTimeout(renderTimeout);
+      console.warn(err);
+      alert('GIF rendering failed. Please try again or reduce the canvas size.');
+      setButtonState(false, '🎞️ Export GIF');
     });
 
     gif.on('finished', (blob) => {
+      clearTimeout(renderTimeout);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -703,6 +749,7 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     });
 
     gif.on('abort', () => {
+      clearTimeout(renderTimeout);
       setButtonState(false, '🎞️ Export GIF');
     });
   });
