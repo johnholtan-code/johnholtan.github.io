@@ -220,9 +220,7 @@ let activeEmitter='A';
 
 // Settings modal
 const modal=$('settingsModal'),openBtn=$('openSettings'),applyBtn=$('applySettings');
-if (openBtn) {
-  openBtn.onclick=()=>{modal.style.display='flex';loadDefaults();};
-}
+openBtn.onclick=()=>{modal.style.display='flex';loadDefaults();};
 applyBtn.onclick=()=>{saveDefaults();modal.style.display='none';};
 window.onclick=e=>{if(e.target===modal)modal.style.display='none';};
 
@@ -643,10 +641,22 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
 (() => {
   const exportBtn = document.getElementById('exportGif');
   if (!exportBtn) return;
+  let workerScriptUrl;
 
   function setButtonState(isBusy, label) {
     exportBtn.disabled = isBusy;
     exportBtn.textContent = label;
+  }
+
+  async function getWorkerScriptUrl() {
+    if (workerScriptUrl) return workerScriptUrl;
+    const workerSrc = 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js';
+    const response = await fetch(workerSrc);
+    if (!response.ok) throw new Error('Failed to load GIF worker.');
+    const workerText = await response.text();
+    const blob = new Blob([workerText], { type: 'text/javascript' });
+    workerScriptUrl = URL.createObjectURL(blob);
+    return workerScriptUrl;
   }
 
   exportBtn.addEventListener('click', async () => {
@@ -663,13 +673,27 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
 
     setButtonState(true, 'Capturing…');
 
-    const gif = new GIF({
-      workers: 0,
-      quality: 12,
-      repeat: 0,
-      width: canvas.width,
-      height: canvas.height
-    });
+    let gif;
+    try {
+      const workerUrl = await getWorkerScriptUrl();
+      gif = new GIF({
+        workers: 2,
+        quality: 12,
+        repeat: 0,
+        width: canvas.width,
+        height: canvas.height,
+        workerScript: workerUrl
+      });
+    } catch (err) {
+      console.warn(err);
+      gif = new GIF({
+        workers: 0,
+        quality: 12,
+        repeat: 0,
+        width: canvas.width,
+        height: canvas.height
+      });
+    }
 
     let renderTimeout;
     const startRenderTimeout = () => {
