@@ -138,9 +138,12 @@
 <header>
   <div>
     <h1>The Hazmat Guys - Flaminator 9000</h1>
-    <p>Dual emitters, true black smoke, and persistent settings.</p>
+    <p>Train hard. Break nothing. Learn everything.</p>
   </div>
-  <button class="settings-btn" id="openSettings">⚙️ Settings</button>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="settings-btn" id="exportGif">🎞️ Export GIF</button>
+    <button class="settings-btn" id="openSettings">⚙️ Settings</button>
+  </div>
 </header>
 
 <!-- Settings Modal -->
@@ -217,7 +220,9 @@ let activeEmitter='A';
 
 // Settings modal
 const modal=$('settingsModal'),openBtn=$('openSettings'),applyBtn=$('applySettings');
-openBtn.onclick=()=>{modal.style.display='flex';loadDefaults();};
+if (openBtn) {
+  openBtn.onclick=()=>{modal.style.display='flex';loadDefaults();};
+}
 applyBtn.onclick=()=>{saveDefaults();modal.style.display='none';};
 window.onclick=e=>{if(e.target===modal)modal.style.display='none';};
 
@@ -538,15 +543,19 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
   window.__syncSettingsBtnWidth = true;
 
   const settingsBtn = document.getElementById('openSettings');
+  const exportBtn = document.getElementById('exportGif');
   const addBtn = document.getElementById('addEmitterB');
   const toggle = document.getElementById('panelToggle');
   let rAF, debounce;
 
   function syncWidth() {
-    if (!settingsBtn || !addBtn) return;
+    if (!addBtn || (!settingsBtn && !exportBtn)) return;
     const rect = addBtn.getBoundingClientRect();
     const w = Math.ceil(rect.width);
-    if (w > 0) settingsBtn.style.width = w + 'px';
+    if (w > 0) {
+      if (settingsBtn) settingsBtn.style.width = w + 'px';
+      if (exportBtn) exportBtn.style.width = w + 'px';
+    }
   }
 
   function scheduleSync(delay = 0) {
@@ -627,6 +636,113 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     #panelToggle{ text-shadow: 0 0 3px rgba(255,255,255,0.6); }
   }
 </style>
+
+<!-- ===== APPENDED ONLY: GIF export support ===== -->
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+<script>
+(() => {
+  const exportBtn = document.getElementById('exportGif');
+  if (!exportBtn) return;
+
+  function setButtonState(isBusy, label) {
+    exportBtn.disabled = isBusy;
+    exportBtn.textContent = label;
+  }
+
+  exportBtn.addEventListener('click', () => {
+    if (typeof GIF === 'undefined') {
+      alert('GIF export library failed to load. Please check your connection and try again.');
+      return;
+    }
+
+    const canvas = document.getElementById('c');
+    const fps = 20;
+    const durationMs = 3000;
+    const frameDelay = 1000 / fps;
+    const totalFrames = Math.round((durationMs / 1000) * fps);
+
+    function captureFrames(gif, onDone) {
+      setButtonState(true, 'Capturing…');
+      let captured = 0;
+      const captureInterval = setInterval(() => {
+        gif.addFrame(canvas, { copy: true, delay: frameDelay });
+        captured += 1;
+        if (captured >= totalFrames) {
+          clearInterval(captureInterval);
+          onDone();
+        }
+      }, frameDelay);
+    }
+
+    function renderGif(workers, onFailure) {
+      const gifConfig = {
+        workers,
+        quality: 12,
+        repeat: 0,
+        width: canvas.width,
+        height: canvas.height
+      };
+      if (workers > 0) {
+        gifConfig.workerScript = 'https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js';
+      }
+      const gif = new GIF(gifConfig);
+      let hasProgress = false;
+      let progressGuard = setTimeout(() => {
+        if (!hasProgress) {
+          gif.abort();
+        }
+      }, 3000);
+
+      captureFrames(gif, () => {
+        setButtonState(true, 'Rendering…');
+        gif.render();
+      });
+
+      gif.on('progress', (p) => {
+        hasProgress = true;
+        clearTimeout(progressGuard);
+        const pct = Math.max(0, Math.min(100, Math.round(p * 100)));
+        setButtonState(true, `Rendering… ${pct}%`);
+      });
+
+      gif.on('finished', (blob) => {
+        clearTimeout(progressGuard);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'flaminator-loop.gif';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setButtonState(false, '🎞️ Export GIF');
+      });
+
+      gif.on('error', () => {
+        clearTimeout(progressGuard);
+        onFailure();
+      });
+
+      gif.on('abort', () => {
+        clearTimeout(progressGuard);
+        if (!hasProgress) {
+          onFailure();
+          return;
+        }
+        setButtonState(false, '🎞️ Export GIF');
+      });
+    }
+
+    renderGif(2, () => {
+      setButtonState(true, 'Retrying without workers…');
+      renderGif(0, () => {
+        alert('GIF rendering failed. Please try again or reduce the canvas size.');
+        setButtonState(false, '🎞️ Export GIF');
+      });
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
