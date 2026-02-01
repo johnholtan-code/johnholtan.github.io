@@ -634,7 +634,21 @@ let last=performance.now();function tick(now){const dt=Math.min(.05,(now-last)/1
     #panelToggle{ text-shadow: 0 0 3px rgba(255,255,255,0.6); }
   }
 </style>
-
+<style>
+  /* ===== APPENDED ONLY: Remove top gap above photo/canvas ===== */
+  .stage{
+    display:block !important;     /* stop grid centering */
+    padding:0 !important;
+  }
+  canvas#c{
+    display:block !important;     /* removes inline-canvas baseline gaps */
+    width:100% !important;
+    height:100% !important;       /* fill the stage vertically */
+    max-width:none !important;
+    border-radius:12px;
+    background:#000;
+  }
+</style>
 <!-- ===== APPENDED ONLY: GIF export support ===== -->
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 <script>
