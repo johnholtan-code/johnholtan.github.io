@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>LightsOn Safety Solutions – After Action Reporter</title>
+<title>The HazMat Guys – After Action Reporter</title>
 <!-- Add Leaflet CSS and JS for maps -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/KFQN2E3k/VnkasWQM="
@@ -187,7 +187,7 @@
     }
 
     body::after {
-      content: "Generated with LightsOn Safety Solutions – After Action Reporter";
+      content: "The HazMat Guys – After Action Reporter";
       display: block;
       margin-top: 2em;
       font-size: 9pt;
@@ -251,7 +251,7 @@
     <header class="appbar">
       <div class="brand">
         <span class="dot" aria-hidden="true"></span>
-        <div>LightsOn Safety Solutions<br /><small>After Action Reporter</small></div>
+        <div>The HazMat Guys<br /><small>After Action Reporter</small></div>
       </div>
       <div class="row">
         <button id="btnStart" class="btn red" style="min-width: 360px; padding-left:24px; padding-right:24px;">Start Log</button>
@@ -692,7 +692,7 @@ btnUndo.addEventListener('click', ()=>{
   if(!timeline.length) return; timeline.pop(); saveTL(); render();
 });
 btnExport.addEventListener('click', ()=>{
-  const payload={ meta:{ app:'LightsOn Safety Solutions – After Action Reporter', exportedAt:new Date().toISOString() }, actions:CATEGORY_ACTIONS, timeline };
+  const payload={ meta:{ app:'The HazMat Guys – After Action Reporter', exportedAt:new Date().toISOString() }, actions:CATEGORY_ACTIONS, timeline };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
   a.href=url; a.download='AAR_export.json'; document.body.appendChild(a); a.click();
